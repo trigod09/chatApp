@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <title>Users</title>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="index.js"></script>
+        <style>
+            li {
+                user-select: none;
+                /* border-top: 1px solid #ee3156;
+           */
+                width: 100vw;
+                padding: 10px 15px;
+            }
+        </style>
+    </head>
+    <body class="bg-[#fff] text-[#222] font-sans">
+        <nav class="bg-[#ee3156] text-center text-white h-10 p-2">
+            <a class="text-xl">ChatApp</a>
+        </nav>
+        <hr />
+        <h2 class="text-[#ee3156] m-3 font-bold text-xl">Signed up Users</h2>
+        <ul class="users font-bold text-gray-700 text-lg"></ul>
+        <script>
+            const socket = io({
+                auth: {
+                    serverOffset: 0,
+                },
+                ackTimeout: 10000,
+                retries: 3,
+            });
+
+            const usersCon = document.querySelector(".users");
+            const users = new Set();
+
+            const userPromise = new Promise((resolve) => {
+                // Handle new username from server
+                socket.on("username", (user, serverOffset) => {
+                    users.add(user);
+                    window.scrollTo(0, document.body.scrollHeight);
+                    socket.auth.serverOffset = serverOffset;
+
+                    // Resolve the promise after handling the username event
+                    resolve();
+                });
+            });
+
+            Promise.all([userPromise]).then(() => {
+                // Convert the Set to an array
+                const users0 = [...users];
+                console.log(users, users0);
+
+                // Iterate over the array and create list items
+                users0.forEach((user1) => {
+                    const item = document.createElement("li"); // Create item here
+                    item.textContent = user1;
+
+                    // Handle click
+                    item.addEventListener("click", () => {
+                        let receiver = item.textContent;
+                        socket.emit("receiver", receiver);
+                        window.location.href = "/chatroom";
+                    });
+
+                    usersCon.appendChild(item); // Append each item inside the loop
+                });
+            });
+        </script>
+<script src="https://cdn.tailwindcss.com"></script>
+    </body>
+</html>

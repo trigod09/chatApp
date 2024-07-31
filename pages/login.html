@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Login</title>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="index.js"></script>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+            integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
+    </head>
+    <body class="text-center text-lg justifiy-center">
+        <form class="mt-40 mb-10" id="form">
+            <h1 class="text-3xl text-[#ee3156] font-bold">Log In</h1>
+            <input
+                id="username"
+                class="p-2 mt-5 border-2 rounded-lg bg-gray-50 text-gray-600 shadow-lg shadow-gray-500/50 focus:outline-gray-200 focus:ring-4 focus:ring-red-300 focus:shadow-[#ee3156]/50"
+                type="text"
+                placeholder="username"
+                required
+            />
+            <br />
+            <div class="ml-[13vw] mt-5 flex">
+                <input
+                    id="password"
+                    class="password w-68 p-2 border-2 rounded-lg bg-gray-50 text-gray-600 shadow-lg shadow-gray-500/50 focus:outline-gray-200 focus:ring-4 focus:ring-red-300 focus:shadow-[#ee3156]/50"
+                    type="password"
+                    placeholder="password"
+                    required
+                />
+                <botton
+                    class="eye-btn p-2 relative left-[-3rem] border-left-2 text-[#ee3156] text-2xl"
+                    ><i class="fa-solid fa-eye"></i
+                ></botton>
+            </div>
+            <br />
+            <button
+                class="py-3 w-64 text-white rounded-lg bg-[#ee3156] shadow-lg shadow-[#ee3156]/50"
+                type="submit"
+            >
+                Log in
+            </button>
+        </form>
+        <div id="response" class="flex flex-row justify-center flex-wrap"></div>
+        <script>
+            const password = document.querySelector(".password");
+            const eyeBtn = document.querySelector(".eye-btn");
+            eyeBtn.addEventListener("click", () => {
+                if (password.type === "password") {
+                    password.type = "text";
+                    eyeBtn.innerHTML = `<i class="fa-solid fa-eye"></i>`;
+                } else {
+                    password.type = "password";
+                    eyeBtn.innerHTML = '<i class="fa-solid fa-eye-slash"></i>';
+                }
+            });
+        </script>
+        <script>
+            let counter = 0;
+
+            const socket = io({
+                auth: {
+                    serverOffset: 0,
+                },
+                ackTimeout: 10000,
+                retries: 3,
+            });
+
+            const form = document.getElementById("form");
+            const username = document.getElementById("username");
+            const response = document.getElementById("response");
+            const users = document.getElementById("msg");
+            
+            form.addEventListener("submit", (e,res) => {
+                e.preventDefault();
+
+                if (username.value) {
+                    const clientOffset = `${socket.id}-${counter++}`;
+                    socket.emit("login", username.value, clientOffset);
+                    // Redirect to the /users page upon successful registration
+                    window.location.href = '/users';
+signedIn=true;
+                }
+            });
+        </script>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </body>
+</html>
