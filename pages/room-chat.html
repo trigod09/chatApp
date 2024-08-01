@@ -1,0 +1,264 @@
+<!doctype html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Chatroom</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+      }
+
+      #messages > div {
+        padding: 0.5rem 2rem;
+        border-radius: 1.5rem;
+        max-width: 60%;
+      }
+      .sended {
+        margin: 0.7rem;
+        margin-left: auto;
+        text-align: right;
+        background-color: #ee3156;
+        color: white;
+      }
+
+      .received {
+        margin: 0.7rem;
+        background-color: #ddd;
+        color: #222;
+      }
+
+      img {
+        padding: 0;
+        object-fit: cover;
+        border-radius: 0.5rem;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+      integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="text-xl">
+    <div
+      class="text-white fixed top-0 w-full flex items-center bg-[#ee3156] px-5 py-2 text-lg"
+    >
+      <a href="/users"><i class="fa-solid fa-arrow-left"></i></a>
+      <p class="mx-auto font-bold" id="username"></p>
+      <a id="logout"><i class="fa-solid fa-right-from-bracket"></i></a>
+    </div>
+    <ul id="messages" class="my-20"></ul>
+    <form
+      id="form"
+      class="fixed bottom-0 w-full flex justify-center items-center text-lg px-3 py-2"
+      action=""
+    >
+      <!-- File input -->
+      <input id="fileInput" type="file" class="hidden" />
+      <button
+        id="fileButton"
+        type="button"
+        class="text-[#ee3156] fixed left-[1rem] text-xl rounded-[50%] h-[3.2rem] w-[3.2rem] flex items-center justify-center mr-3"
+      >
+        <i class="fa-solid fa-paperclip"></i>
+      </button>
+
+      <!-- Message input -->
+      <input
+        id="messageInput"
+        type="text"
+        placeholder="Type a message..."
+        class="rounded-[1.5rem] w-[80%] mr-3 pl-[3rem] pr-4 py-2 bg-gray-50 text-gray-700 text-xl border-2 focus:outline-none focus:ring-2 focus:ring-red-400"
+        autocomplete="off"
+      />
+      <button
+        type="submit"
+        class="bg-[#ee3156] text-xl text-white rounded-[50%] h-[3.2rem] w-[3.2rem]"
+      >
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </form>
+    <script>
+      let counter = 0;
+
+      const socket = io({
+        auth: {
+          serverOffset: 0,
+        },
+        ackTimeout: 10000,
+        retries: 3,
+      });
+
+      const form = document.getElementById("form");
+      const fileInput = document.getElementById("fileInput");
+      const fileButton = document.getElementById("fileButton");
+      const messageInput = document.getElementById("messageInput");
+      const messages = document.getElementById("messages");
+      const userText = document.getElementById("username");
+      const logout = document.getElementById("logout");
+
+      let sender0;
+      let receiver0;
+      let sender1;
+      let receiver1;
+      let user0;
+      let msg0 = [];
+
+      const senderPromise = new Promise((resolve) => {
+        socket.on("sender", (sender) => {
+          sender0 = sender;
+          resolve();
+        });
+      });
+
+      const receiverPromise = new Promise((resolve) => {
+        socket.on("receiver", (receiver) => {
+          receiver0 = receiver;
+          userText.textContent = receiver;
+          resolve();
+        });
+      });
+
+      const userPromise = new Promise((resolve) => {
+        socket.on("username", (user) => {
+          user0 = user;
+          resolve();
+        });
+      });
+
+      const msgPromise = new Promise((resolve) => {
+        socket.on("chat message", (serverOffset, msg, sender, receiver) => {
+          sender1 = sender;
+          receiver1 = receiver;
+          userText.textContent = receiver;
+          if (/*sender === user0 || */ receiver === userText.textContent) {
+            msg0.push({ msg, sender, receiver });
+            // displayMessage(msg, sender, receiver);
+            saveMessages(); // Save messages after receiving new ones
+          }
+          resolve();
+        });
+      });
+
+      // Wait for all promises to resolve before setting up message handling
+      Promise.all([
+        userPromise,
+        senderPromise,
+        receiverPromise,
+        msgPromise,
+      ]).then(() => {
+        console.log(
+          "All variables are initialized. Ready to process messages.",
+        );
+        loadMessages(); // Load messages after initialization
+      });
+
+      // Load messages from localStorage if available
+      function loadMessages() {
+        const savedMessages = JSON.parse(localStorage.getItem("messages"));
+        if (savedMessages) {
+          msg0 = savedMessages;
+          msg0.forEach(({ msg, sender, receiver }) => {
+            if (/*sender === user0 ||*/ receiver === userText.textContent) {
+              displayMessage(msg, sender, receiver);
+            }
+          });
+        }
+      }
+
+      // Save messages to localStorage
+      function saveMessages() {
+        localStorage.setItem("messages", JSON.stringify(msg0));
+      }
+
+      function displayMessage(msg, sender, receiver) {
+        const item = document.createElement("div");
+        const span = document.createElement("span");
+        const img = document.createElement("img");
+span.innerHTML=`<span class='text-md text-blue-600'>${sender}</span><br/>`;
+  if (msg.startsWith("data:")) {
+          img.src = msg;
+          item.appendChild(span);
+          item.appendChild(img);
+          item.classList.add(sender === user0 ? "sended" : "received");
+        } else {
+          item.innerHTML = `        <span class='text-md text-blue-600'>${sender}</span><br/>
+          <div>${msg}</div>`;
+          item.classList.add(sender === user0 ? "sended" : "received");
+        }
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+      item.addEventListener('click',()=>{
+        img.requestFullscreen();
+      })
+      }
+
+      logout.addEventListener("click", () => {
+        user0 = "";
+        sender0 = "";
+        receiver0 = "";
+        sender1 = "";
+        receiver1 = "";
+
+        window.location.href = "/login";
+      });
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        if (fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          const reader = new FileReader();
+
+          reader.onload = function (event) {
+            const fileContent = event.target.result;
+
+            // Send file message
+            socket.emit("sender", user0);
+            const clientOffset = `${socket.id}-${counter++}`;
+            socket.emit(
+              "chat message",
+              clientOffset,
+              fileContent,
+              sender0,
+              receiver0,
+            );
+
+            // Display the file
+            displayMessage(fileContent, sender0, receiver0);
+          };
+
+          reader.readAsDataURL(file);
+          fileInput.value = ""; // Clear file input after sending
+        } else if (messageInput.value) {
+          // Send text message
+          socket.emit("sender", user0);
+          const clientOffset = `${socket.id}-${counter++}`;
+          socket.emit(
+            "chat message",
+            clientOffset,
+            messageInput.value,
+            sender0,
+            receiver0,
+          );
+
+          // Display the text message
+          displayMessage(messageInput.value, sender0, receiver0);
+          messageInput.value = ""; // Clear message input after sending
+        }
+      });
+
+      // Trigger file input when file button is clicked
+      fileButton.addEventListener("click", () => {
+        fileInput.click();
+      });
+    </script>
+  </body>
+</html>

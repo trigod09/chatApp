@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Login</title>
+        <title>Create Room</title>
         <script src="/socket.io/socket.io.js"></script>
         <script src="index.js"></script>
         <link
@@ -16,12 +16,12 @@
     </head>
     <body class="text-center text-lg justifiy-center">
         <form class="mt-40 mb-10" id="form">
-            <h1 class="text-3xl text-[#ee3156] font-bold">Log In</h1>
+            <h1 class="text-3xl text-[#ee3156] font-bold">Create Room</h1>
             <input
-                id="username"
+                id="roomname"
                 class="p-2 mt-5 border-2 rounded-lg bg-gray-50 text-gray-600 shadow-lg shadow-gray-500/50 focus:outline-gray-200 focus:ring-4 focus:ring-red-300 focus:shadow-[#ee3156]/50"
                 type="text"
-                placeholder="username"
+                placeholder="roomname"
                 required
             />
             <br />
@@ -43,10 +43,10 @@
                 class="py-3 w-64 text-white rounded-lg bg-[#ee3156] shadow-lg shadow-[#ee3156]/50"
                 type="submit"
             >
-                Log in
+                Create
             </button>
         </form>
-        <div id="response" class="m-auto w-60"></div>
+        <div id="response" class="w-60 m-auto"></div>
         <script>
             const password = document.querySelector(".password");
             const eyeBtn = document.querySelector(".eye-btn");
@@ -72,30 +72,34 @@
             });
 
             const form = document.getElementById("form");
-            const username = document.getElementById("username");
+            const roomname = document.getElementById("roomname");
             const response = document.getElementById("response");
-            const users = document.getElementById("msg");
-            
-            form.addEventListener("submit", (e,res) => {
+            form.addEventListener("submit", (e, res) => {
                 e.preventDefault();
                 // Listen for the 'userexists' event to display an error message
-                socket.on("usernotexists", (message) => {
+                socket.on("roomexists", (message) => {
                     response.innerHTML = message;
-                    username.disabled = true;
+                    roomname.disabled = true;
                     password.disabled = true;
                 });
 
-                if (username.value) {
+                if (roomname.value) {
                     const clientOffset = `${socket.id}-${counter++}`;
-                    socket.emit("login", username.value, clientOffset);
-                    // waiting for usernotexists to set innerHTML of response
+                    socket.emit(
+                        "roomname",
+                        roomname.value,
+                        password.value,
+                        clientOffset,
+                    );
+
+                    // waiting for userexists to set innerHTML of response
                     setTimeout(() => {
                         if (response.innerHTML === "") {
                             // Redirect to the /users page upon successful registration
                             window.location.href = "/users";
                             signedIn = true;
                         }
-                    }, 1000 /*assuming usernotexists event took 1 sec to set innerHTML of response*/);
+                    }, 1000 /*assuming userexists event took 1 sec to set innerHTML of response*/);
                 }
             });
         </script>

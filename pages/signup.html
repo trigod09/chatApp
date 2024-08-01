@@ -15,7 +15,7 @@
         />
     </head>
     <body class="text-center text-lg justifiy-center">
-        <form class="mt-40 mb-10" id="form">
+        <form class="mt-40 mb-10" id="form" method="post" action="/signin">
             <h1 class="text-3xl text-[#ee3156] font-bold">Sign Up</h1>
             <input
                 id="username"
@@ -46,7 +46,7 @@
                 Sign Up
             </button>
         </form>
-        <div id="response" class="flex flex-row justify-center flex-wrap"></div>
+        <div id="response" class="w-60 m-auto"></div>
         <script>
             const password = document.querySelector(".password");
             const eyeBtn = document.querySelector(".eye-btn");
@@ -75,10 +75,7 @@
             const username = document.getElementById("username");
             const response = document.getElementById("response");
             const users = document.getElementById("msg");
-            socket.on("userexists", (message) => {
-                response.textContent = message;
-            });
-            form.addEventListener("submit", (e,res) => {
+            form.addEventListener("submit", (e, res) => {
                 e.preventDefault();
                 // Listen for the 'userexists' event to display an error message
                 socket.on("userexists", (message) => {
@@ -89,10 +86,21 @@
 
                 if (username.value) {
                     const clientOffset = `${socket.id}-${counter++}`;
-                    socket.emit("username", username.value, clientOffset);
-                    // Redirect to the /users page upon successful registration
-                    window.location.href = '/users';
-signedIn=true;
+                    socket.emit(
+                        "username",
+                        username.value,
+                        password.value,
+                        clientOffset,
+                    );
+
+                    // waiting for userexists to set innerHTML of response
+                    setTimeout(() => {
+                        if (response.innerHTML === "") {
+                            // Redirect to the /users page upon successful registration
+                            window.location.href = "/users";
+                            signedIn = true;
+                        }
+                    }, 1000 /*assuming userexists event took 1 sec to set innerHTML of response*/);
                 }
             });
         </script>

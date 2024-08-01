@@ -10,10 +10,28 @@
         <style>
             li {
                 user-select: none;
-                /* border-top: 1px solid #ee3156;
-           */
-                width: 100vw;
-                padding: 10px 15px;
+                border: 1px solid gray;
+                border-radius: 8px;
+                margin: 10px;
+                width: 80%;
+                padding: 10px 20px;
+                background-color: #f8f9fa;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                transition:
+                    background-color 0.3s ease,
+                    transform 0.2s ease;
+                cursor: pointer;
+                list-style: none;
+            }
+
+            li:hover {
+                background-color: #f1f1f1;
+                transform: translateY(-5px);
+            }
+
+            li:active {
+                background-color: #e2e2e2;
+                transform: translateY(0);
             }
         </style>
     </head>
@@ -21,9 +39,23 @@
         <nav class="bg-[#ee3156] text-center text-white h-10 p-2">
             <a class="text-xl">ChatApp</a>
         </nav>
-        <hr />
-        <h2 class="text-[#ee3156] m-3 font-bold text-xl">Signed up Users</h2>
+        <h2
+            class="border-b-4 border-[#ee3156] block text-[#ee3156] mx-3 my-7 py-2 font-bold text-xl"
+        >
+            Signed up Users
+        </h2>
         <ul class="users font-bold text-gray-700 text-lg"></ul>
+        <h2
+            class="border-b-4 border-[#ee3156] block text-[#ee3156] mx-3 my-7 py-2 font-bold text-xl"
+        >
+            Available rooms
+        </h2>
+        <a
+            class="text-xl px-20 py-3 mx-3 rounded-lg bg-[#ee3156] text-white"
+            href="/createroom"
+            >Create Room</a
+        >
+        <ul class="rooms my-10 font-bold text-gray-700 text-lg"></ul>
         <script>
             const socket = io({
                 auth: {
@@ -35,6 +67,8 @@
 
             const usersCon = document.querySelector(".users");
             const users = new Set();
+            const roomsCon = document.querySelector(".rooms");
+            const rooms = new Set();
 
             const userPromise = new Promise((resolve) => {
                 // Handle new username from server
@@ -47,11 +81,22 @@
                     resolve();
                 });
             });
+            const roomPromise = new Promise((resolve) => {
+                // Handle new username from server
+                socket.on("roomname", (room, serverOffset) => {
+                    rooms.add(room);
+                    window.scrollTo(0, document.body.scrollHeight);
+                    socket.auth.serverOffset = serverOffset;
 
-            Promise.all([userPromise]).then(() => {
+                    // Resolve the promise after handling the username event
+                    resolve();
+                });
+            });
+
+            Promise.all([userPromise,roomPromise]).then(() => {
                 // Convert the Set to an array
                 const users0 = [...users];
-                console.log(users, users0);
+                const rooms0 = [...rooms];
 
                 // Iterate over the array and create list items
                 users0.forEach((user1) => {
@@ -67,8 +112,20 @@
 
                     usersCon.appendChild(item); // Append each item inside the loop
                 });
+                        rooms0.forEach((room1) => {
+                    const item = document.createElement("li"); // Create item here
+                    item.textContent = room1;
+
+                    // Handle click
+                    item.addEventListener("click", () => {
+                        let receiver = item.textContent;
+                        socket.emit("receiver", receiver);
+                        window.location.href = "/room";
+                    });
+                       roomsCon.appendChild(item); // Append each item inside the loop
+                        })
             });
         </script>
-<script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.tailwindcss.com"></script>
     </body>
 </html>
