@@ -140,7 +140,6 @@
           userText.textContent = receiver;
           if (sender === user0 || receiver === user0) {
             msg0.push({ msg, sender, receiver });
-            displayMessage(msg, sender, receiver);
             saveMessages(); // Save messages after receiving new ones
           }
           resolve();

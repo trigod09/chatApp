@@ -1,5 +1,5 @@
 run = "node index.js"
-modules = ["nodejs-20"]
+modules = ["web", "nodejs-20"]
 
 [deployment]
 run = ["sh", "-c", "node index.js"]
@@ -36,3 +36,6 @@ externalPort = 80
 
 [rules.formatter.fileExtensions.".js"]
 id = "module:nodejs-20/formatter:prettier"
+
+[nix]
+channel = "stable-24_05"

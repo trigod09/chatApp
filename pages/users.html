@@ -93,10 +93,9 @@
                 });
             });
 
-            Promise.all([userPromise,roomPromise]).then(() => {
+            Promise.all([userPromise]).then(() => {
                 // Convert the Set to an array
                 const users0 = [...users];
-                const rooms0 = [...rooms];
 
                 // Iterate over the array and create list items
                 users0.forEach((user1) => {
@@ -107,11 +106,18 @@
                     item.addEventListener("click", () => {
                         let receiver = item.textContent;
                         socket.emit("receiver", receiver);
-                        window.location.href = "/chatroom";
+                        window.location.href = "/chat";
                     });
 
                     usersCon.appendChild(item); // Append each item inside the loop
                 });
+            });
+
+            Promise.all([userPromise,roomPromise]).then(() => {
+                // Convert the Set to an array
+                const rooms0 = [...rooms];
+
+                // Iterate over the array and create list items
                         rooms0.forEach((room1) => {
                     const item = document.createElement("li"); // Create item here
                     item.textContent = room1;
@@ -125,6 +131,7 @@
                        roomsCon.appendChild(item); // Append each item inside the loop
                         })
             });
+            
         </script>
         <script src="https://cdn.tailwindcss.com"></script>
     </body>

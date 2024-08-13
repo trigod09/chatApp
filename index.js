@@ -82,7 +82,7 @@ await db.exec(`
   `);
 
 app.get("/", (req, res) => {
-  res.redirect(isSignedIn ? "/chatroom" : "/users");
+  res.redirect(isSignedIn ? "/chatroom" : "/welcome");
 });
 
 app.get("/welcome", (req, res) => {
